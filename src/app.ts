@@ -8,13 +8,20 @@ const logger = pino({
   level: process.env.LOG_LEVEL
 });
 
+/** スパム対策を行うユーザのREST API Client */
 const restApi = createRestAPIClient({
   url: process.env.URL as string,
-  accessToken: process.env.TOKEN,
+  accessToken: process.env.USER_TOKEN,
 });
+/** スパム対策を行うユーザのStreaming API Client */
 const streamingAPI = createStreamingAPIClient({
   streamingApiUrl: process.env.URL as string,
-  accessToken: process.env.TOKEN
+  accessToken: process.env.USER_TOKEN,
+});
+/** スパム報告を行うREST API Client */
+const spamReportRestApi = createRestAPIClient({
+  url: process.env.URL as string,
+  accessToken: process.env.SPAM_REPORTER_TOKEN ?? process.env.USER_TOKEN,
 });
 const relationshipsStore = new RelationshipsStore(restApi);
 
@@ -36,7 +43,7 @@ const relationshipsStore = new RelationshipsStore(restApi);
         if (shouldReport) {
           logger.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
           try {
-            await restApi.v1.reports.create({
+            await spamReportRestApi.v1.reports.create({
               accountId: status.account.id,
               statusIds: [status.id],
               comment: process.env.REPORT_COMMENT,

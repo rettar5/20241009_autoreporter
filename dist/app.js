@@ -67,6 +67,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const pino_1 = require("pino");
@@ -76,13 +77,20 @@ const relationshipsstore_1 = require("./relationshipsstore");
 const logger = (0, pino_1.pino)({
     level: process.env.LOG_LEVEL
 });
+/** スパム対策を行うユーザのREST API Client */
 const restApi = (0, masto_1.createRestAPIClient)({
     url: process.env.URL,
-    accessToken: process.env.TOKEN,
+    accessToken: process.env.USER_TOKEN,
 });
+/** スパム対策を行うユーザのStreaming API Client */
 const streamingAPI = (0, masto_1.createStreamingAPIClient)({
     streamingApiUrl: process.env.URL,
-    accessToken: process.env.TOKEN
+    accessToken: process.env.USER_TOKEN
+});
+/** スパム報告を行うREST API Client */
+const spamReportRestApi = (0, masto_1.createRestAPIClient)({
+    url: process.env.URL,
+    accessToken: (_a = process.env.SPAM_REPORTER_TOKEN) !== null && _a !== void 0 ? _a : process.env.USER_TOKEN,
 });
 const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
 (() => __awaiter(void 0, void 0, void 0, function* () {
@@ -109,7 +117,7 @@ const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
                         if (shouldReport) {
                             logger.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
                             try {
-                                yield restApi.v1.reports.create({
+                                yield spamReportRestApi.v1.reports.create({
                                     accountId: status.account.id,
                                     statusIds: [status.id],
                                     comment: process.env.REPORT_COMMENT,
