@@ -67,7 +67,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
-var _a;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const pino_1 = require("pino");
@@ -75,7 +75,7 @@ const masto_1 = require("masto");
 const utils_1 = require("./utils");
 const relationshipsstore_1 = require("./relationshipsstore");
 const logger = (0, pino_1.pino)({
-    level: process.env.LOG_LEVEL
+    level: (_a = process.env.LOG_LEVEL) !== null && _a !== void 0 ? _a : 'info'
 });
 /** スパム対策を行うユーザのREST API Client */
 const restApi = (0, masto_1.createRestAPIClient)({
@@ -85,14 +85,15 @@ const restApi = (0, masto_1.createRestAPIClient)({
 /** スパム対策を行うユーザのStreaming API Client */
 const streamingAPI = (0, masto_1.createStreamingAPIClient)({
     streamingApiUrl: process.env.URL,
-    accessToken: process.env.USER_TOKEN
+    accessToken: process.env.USER_TOKEN,
 });
 /** スパム報告を行うREST API Client */
 const spamReportRestApi = (0, masto_1.createRestAPIClient)({
     url: process.env.URL,
-    accessToken: (_a = process.env.SPAM_REPORTER_TOKEN) !== null && _a !== void 0 ? _a : process.env.USER_TOKEN,
+    accessToken: (_b = process.env.SPAM_REPORTER_TOKEN) !== null && _b !== void 0 ? _b : process.env.USER_TOKEN,
 });
 const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
+const shouldBlockAccount = !!process.env.SHOULD_BLOCK_SPAM_ACCOUNT;
 (() => __awaiter(void 0, void 0, void 0, function* () {
     var _a, e_1, _b, _c;
     const env_1 = { stack: [], error: void 0, hasError: false };
@@ -117,6 +118,7 @@ const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
                         if (shouldReport) {
                             logger.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
                             try {
+                                // report spam account
                                 yield spamReportRestApi.v1.reports.create({
                                     accountId: status.account.id,
                                     statusIds: [status.id],
@@ -125,6 +127,16 @@ const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
                                     category: 'spam'
                                 });
                                 logger.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
+                                // block spam account
+                                if (shouldBlockAccount) {
+                                    try {
+                                        yield restApi.v1.accounts.$select(status.account.id).block();
+                                        logger.info(`スパム疑いのあるアカウントをブロックしました\n${status.account.url}`);
+                                    }
+                                    catch (e) {
+                                        logger.error(`アカウントブロック処理中にエラーが発生しました\n`, e);
+                                    }
+                                }
                             }
                             catch (e) {
                                 logger.error(`通報処理中にエラーが発生しました\n${status.url}`, e);

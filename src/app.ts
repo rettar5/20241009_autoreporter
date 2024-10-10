@@ -5,7 +5,7 @@ import { getTotalMentionCount, getURLCount, shouldReportStatus, isNotificationEv
 import { RelationshipsStore } from './relationshipsstore';
 
 const logger = pino({
-  level: process.env.LOG_LEVEL
+  level: process.env.LOG_LEVEL ?? 'warn'
 });
 
 /** スパム対策を行うユーザのREST API Client */
@@ -24,6 +24,7 @@ const spamReportRestApi = createRestAPIClient({
   accessToken: process.env.SPAM_REPORTER_TOKEN ?? process.env.USER_TOKEN,
 });
 const relationshipsStore = new RelationshipsStore(restApi);
+const shouldBlockAccount = !!process.env.SHOULD_BLOCK_SPAM_ACCOUNT;
 
 (async () => {
   using events = streamingAPI.user.notification.subscribe();
@@ -43,6 +44,7 @@ const relationshipsStore = new RelationshipsStore(restApi);
         if (shouldReport) {
           logger.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
           try {
+            // report spam status
             await spamReportRestApi.v1.reports.create({
               accountId: status.account.id,
               statusIds: [status.id],
@@ -51,6 +53,16 @@ const relationshipsStore = new RelationshipsStore(restApi);
               category: 'spam'
             });
             logger.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
+
+            // block spam account
+            if (shouldBlockAccount) {
+              try {
+                await restApi.v1.accounts.$select(status.account.id).block();
+                logger.info(`スパム疑いのあるアカウントをブロックしました\n${status.account.url}`);
+              } catch(e) {
+                logger.error(`アカウントブロック処理中にエラーが発生しました\n`, e);
+              }
+            }
           } catch(e) {
             logger.error(`通報処理中にエラーが発生しました\n${status.url}`, e);
           }
