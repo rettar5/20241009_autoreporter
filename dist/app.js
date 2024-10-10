@@ -86,34 +86,38 @@ const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
     const env_1 = { stack: [], error: void 0, hasError: false };
     try {
         const me = yield restApi.v1.accounts.verifyCredentials();
-        const events = __addDisposableResource(env_1, streamingAPI.public.subscribe(), false);
+        // TODO: user.notificationからMentionNotificationを取得するように変える
+        // using events = streamingAPI.public.subscribe();
+        const events = __addDisposableResource(env_1, streamingAPI.user.notification.subscribe(), false);
         try {
             for (var _d = true, events_1 = __asyncValues(events), events_1_1; events_1_1 = yield events_1.next(), _a = events_1_1.done, !_a; _d = true) {
                 _c = events_1_1.value;
                 _d = false;
                 const event = _c;
                 try {
-                    if ((0, utils_1.isUpdateEvent)(event)) {
-                        const status = event.payload;
+                    if ((0, utils_1.isNotificationEvent)(event) && (0, utils_1.isMentionNotification)(event.payload)) {
+                        const notification = event.payload;
+                        const status = notification.status;
                         const isFollowing = yield relationshipsStore.isFollowing(status.account.id);
-                        const hasMention = (0, utils_1.hasMentionToMe)(me, status);
                         const totalMentionCount = (0, utils_1.getTotalMentionCount)(status);
                         const urlCount = (0, utils_1.getURLCount)(status);
                         const shouldReport = (0, utils_1.shouldReportStatus)({
                             isFollowing,
-                            hasMentionToMe: hasMention,
                             totalMentionCount,
                             urlCount
                         });
+                        console.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
+                        console.debug(`${status.account.displayName}: ${(0, utils_1.getPlainContent)(status)}`);
                         if (shouldReport) {
-                            console.debug(`follow: ${isFollowing}, mention: ${hasMention}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
+                            // TODO: loggerを導入する
                             console.info(`スパム疑いのある投稿を検知しました`);
                             console.debug(status.url);
                             try {
                                 yield restApi.v1.reports.create({
                                     accountId: status.account.id,
                                     statusIds: [status.id],
-                                    comment: 'スパム疑い(自動検知)',
+                                    // TODO: 環境変数でコメントを任意に選択できるようにする
+                                    comment: 'スパム疑い(自動通報)',
                                     forward: false,
                                     category: 'spam'
                                 });

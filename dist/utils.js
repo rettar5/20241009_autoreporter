@@ -1,7 +1,7 @@
 "use strict";
 var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.shouldReportStatus = exports.isNotificationEvent = exports.isUpdateEvent = exports.getURLCount = exports.getTotalMentionCount = exports.hasMentionToMe = exports.getPlainContent = void 0;
+exports.shouldReportStatus = exports.isMentionNotification = exports.isNotificationEvent = exports.isUpdateEvent = exports.getURLCount = exports.getTotalMentionCount = exports.hasMentionToMe = exports.getPlainContent = void 0;
 require("dotenv/config");
 const reportThreshold = {
     mentionCount: Number((_a = process.env.REPORT_THRESHOLD_MENTION_COUNT) !== null && _a !== void 0 ? _a : 0),
@@ -37,10 +37,11 @@ const isNotificationEvent = (event) => {
     return event.event === 'notification';
 };
 exports.isNotificationEvent = isNotificationEvent;
-const shouldReportStatus = ({ isFollowing, hasMentionToMe, totalMentionCount, urlCount }) => {
-    return (!isFollowing &&
-        hasMentionToMe &&
-        reportThreshold.mentionCount <= totalMentionCount &&
-        reportThreshold.urlCount <= urlCount);
+const isMentionNotification = (notification) => {
+    return notification.type === 'mention';
+};
+exports.isMentionNotification = isMentionNotification;
+const shouldReportStatus = ({ isFollowing, totalMentionCount, urlCount }) => {
+    return !isFollowing && reportThreshold.mentionCount <= totalMentionCount && reportThreshold.urlCount <= urlCount;
 };
 exports.shouldReportStatus = shouldReportStatus;

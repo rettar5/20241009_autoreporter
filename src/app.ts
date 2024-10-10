@@ -1,45 +1,36 @@
 import 'dotenv/config';
 import { createRestAPIClient, createStreamingAPIClient } from 'masto';
-import { hasMentionToMe, isUpdateEvent, getTotalMentionCount, getURLCount, shouldReportStatus } from './utils';
+import { getTotalMentionCount, getURLCount, shouldReportStatus, isNotificationEvent, isMentionNotification } from './utils';
 import { RelationshipsStore } from './relationshipsstore';
 
 const restApi = createRestAPIClient({
   url: process.env.URL as string,
   accessToken: process.env.TOKEN,
 });
-
 const streamingAPI = createStreamingAPIClient({
   streamingApiUrl: process.env.URL as string,
   accessToken: process.env.TOKEN
 });
-
 const relationshipsStore = new RelationshipsStore(restApi);
 
 (async () => {
-  const me = await restApi.v1.accounts.verifyCredentials();
-
-  // TODO: user.notificationからMentionNotificationを取得するように変える
-  using events = streamingAPI.public.subscribe();
+  using events = streamingAPI.user.notification.subscribe();
   for await (const event of events) {
     try {
-      if (isUpdateEvent(event)) {
-        const status = event.payload;
+      if (isNotificationEvent(event) && isMentionNotification(event.payload)) {
+        const status = event.payload.status;
         const isFollowing = await relationshipsStore.isFollowing(status.account.id);
-        const hasMention = hasMentionToMe(me, status);
         const totalMentionCount = getTotalMentionCount(status);
         const urlCount = getURLCount(status);
         const shouldReport = shouldReportStatus({
           isFollowing,
-          hasMentionToMe: hasMention,
           totalMentionCount,
           urlCount
         });
-  
+
         if (shouldReport) {
           // TODO: loggerを導入する
-          console.debug(`follow: ${isFollowing}, mention: ${hasMention}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
-          console.info(`スパム疑いのある投稿を検知しました`);
-          console.debug(status.url);
+          console.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
           try {
             await restApi.v1.reports.create({
               accountId: status.account.id,
@@ -49,8 +40,9 @@ const relationshipsStore = new RelationshipsStore(restApi);
               forward: false,
               category: 'spam'
             });
+            console.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
           } catch(e) {
-            console.error(`通報処理中にエラーが発生しました`, e);
+            console.error(`通報処理中にエラーが発生しました\n${status.url}`, e);
           }
         }
       }
