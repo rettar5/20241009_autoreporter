@@ -35,8 +35,7 @@ const relationshipsStore = new RelationshipsStore(restApi);
             await restApi.v1.reports.create({
               accountId: status.account.id,
               statusIds: [status.id],
-              // TODO: 環境変数でコメントを任意に選択できるようにする
-              comment: 'スパム疑い(自動通報)',
+              comment: process.env.REPORT_COMMENT,
               forward: false,
               category: 'spam'
             });
