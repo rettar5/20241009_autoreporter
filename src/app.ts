@@ -52,24 +52,24 @@ const shouldBlockAccount = !!process.env.SHOULD_BLOCK_SPAM_ACCOUNT;
               forward: false,
               category: 'spam'
             });
-            logger.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
+            logger.info(`Reported a post suspected of being spam.\n${status.url}`);
 
             // block spam account
             if (shouldBlockAccount) {
               try {
                 await restApi.v1.accounts.$select(status.account.id).block();
-                logger.info(`スパム疑いのあるアカウントをブロックしました\n${status.account.url}`);
+                logger.info(`Blocked an account suspected of being spam.\n${status.account.url}`);
               } catch(e) {
-                logger.error(`アカウントブロック処理中にエラーが発生しました\n`, e);
+                logger.error(`An exception occurred while processing the account block.\n`, e);
               }
             }
           } catch(e) {
-            logger.error(`通報処理中にエラーが発生しました\n${status.url}`, e);
+            logger.error(`An exception occurred while processing the report.\n${status.url}`, e);
           }
         }
       }
     } catch(e) {
-      logger.error(`メッセージ処理中にエラーが発生しました`, e);
+      logger.error(`An exception occurred while processing the message.`, e);
     }
   }
 })();

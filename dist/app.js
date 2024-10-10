@@ -75,7 +75,7 @@ const masto_1 = require("masto");
 const utils_1 = require("./utils");
 const relationshipsstore_1 = require("./relationshipsstore");
 const logger = (0, pino_1.pino)({
-    level: (_a = process.env.LOG_LEVEL) !== null && _a !== void 0 ? _a : 'info'
+    level: (_a = process.env.LOG_LEVEL) !== null && _a !== void 0 ? _a : 'warn'
 });
 /** スパム対策を行うユーザのREST API Client */
 const restApi = (0, masto_1.createRestAPIClient)({
@@ -118,7 +118,7 @@ const shouldBlockAccount = !!process.env.SHOULD_BLOCK_SPAM_ACCOUNT;
                         if (shouldReport) {
                             logger.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
                             try {
-                                // report spam account
+                                // report spam status
                                 yield spamReportRestApi.v1.reports.create({
                                     accountId: status.account.id,
                                     statusIds: [status.id],
@@ -126,26 +126,26 @@ const shouldBlockAccount = !!process.env.SHOULD_BLOCK_SPAM_ACCOUNT;
                                     forward: false,
                                     category: 'spam'
                                 });
-                                logger.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
+                                logger.info(`Reported a post suspected of being spam.\n${status.url}`);
                                 // block spam account
                                 if (shouldBlockAccount) {
                                     try {
                                         yield restApi.v1.accounts.$select(status.account.id).block();
-                                        logger.info(`スパム疑いのあるアカウントをブロックしました\n${status.account.url}`);
+                                        logger.info(`Blocked an account suspected of being spam.\n${status.account.url}`);
                                     }
                                     catch (e) {
-                                        logger.error(`アカウントブロック処理中にエラーが発生しました\n`, e);
+                                        logger.error(`An exception occurred while processing the account block.\n`, e);
                                     }
                                 }
                             }
                             catch (e) {
-                                logger.error(`通報処理中にエラーが発生しました\n${status.url}`, e);
+                                logger.error(`An exception occurred while processing the report.\n${status.url}`, e);
                             }
                         }
                     }
                 }
                 catch (e) {
-                    logger.error(`メッセージ処理中にエラーが発生しました`, e);
+                    logger.error(`An exception occurred while processing the message.`, e);
                 }
             }
         }
