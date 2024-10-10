@@ -69,9 +69,13 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
+const pino_1 = require("pino");
 const masto_1 = require("masto");
 const utils_1 = require("./utils");
 const relationshipsstore_1 = require("./relationshipsstore");
+const logger = (0, pino_1.pino)({
+    level: process.env.LOG_LEVEL
+});
 const restApi = (0, masto_1.createRestAPIClient)({
     url: process.env.URL,
     accessToken: process.env.TOKEN,
@@ -103,8 +107,7 @@ const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
                             urlCount
                         });
                         if (shouldReport) {
-                            // TODO: loggerを導入する
-                            console.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
+                            logger.debug(`follow: ${isFollowing}, mentionCount: ${totalMentionCount}, urlCount: ${urlCount}`);
                             try {
                                 yield restApi.v1.reports.create({
                                     accountId: status.account.id,
@@ -113,16 +116,16 @@ const relationshipsStore = new relationshipsstore_1.RelationshipsStore(restApi);
                                     forward: false,
                                     category: 'spam'
                                 });
-                                console.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
+                                logger.info(`スパム疑いのある投稿を通報しました\n${status.url}`);
                             }
                             catch (e) {
-                                console.error(`通報処理中にエラーが発生しました\n${status.url}`, e);
+                                logger.error(`通報処理中にエラーが発生しました\n${status.url}`, e);
                             }
                         }
                     }
                 }
                 catch (e) {
-                    console.error(`メッセージ処理中にエラーが発生しました`, e);
+                    logger.error(`メッセージ処理中にエラーが発生しました`, e);
                 }
             }
         }

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "npm run build && npm run start",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/app.js",
+    "start": "node dist/app.js | pino-pretty",
     "build": "tsc -p ."
   },
   "author": "rettar5",
@@ -17,6 +17,8 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "masto": "^6.8.0"
+    "masto": "^6.8.0",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.2"
   }
 }
