@@ -1,5 +1,6 @@
 import { mastodon } from 'masto';
 
+export type Account = mastodon.v1.Account;
 export type Status = mastodon.v1.Status;
 export type Notification = mastodon.v1.Notification;
 export type MentionNotification = mastodon.v1.MentionNotification;
