@@ -1,55 +1,56 @@
 # SpamAutoReporterForMastodon
 
 ## Overview
-Mastodonのアカウントにメンションされたスパムの疑いのある投稿を自動で通報します。
+Automatically reports suspicious spam posts that mention your Mastodon account.
 
 ## Features
-* 投稿の自動通報
-* アカウントの自動ブロック
+* Automatic reporting of posts
+* Automatic blocking of accounts
 
 ## Installation
-### コード設定
-1. リポジトリをclone
+### Code Setup
+1. Clone the repository
     1. `$ git clone https://github.com/rettar5/SpamAutoReporterForMastodon.git`
     1. `$ cd SpamAutoReporterForMastodon`
-1. 依存をinstall
-    1. `# npm i`
+1. Install dependencies
+    1. `$ npm i`
 
-### 環境設定
-1. Mastodonの ユーザ設定 > 開発 > 新規アプリ から、以下のアクセス権を持つAccess Tokenを発行
+### Environment Setup
+1. Generate an Access Token from Mastodon (User Settings > Development > New App) with the following permissions:
     * `read:accounts`
-        * アカウントをフォローしているかの判定に利用
+        * Used to determine if the account is followed
     * `read:notifications`
-        * メンションの検知に利用
+        * Used to detect mentions
     * `write:blocks`
-        * アカウントの自動ブロックに利用
+        * Used for automatic account blocking
     * `write:reports`
-        * 投稿の自動通報に利用
-1. `.env.template` を複製し、 `.env` を作成
+        * Used for automatic reporting of posts
+1. Copy `.env.template` and create `.env`
     1. `$ cp .env.template .env`
-1. `.env` に `URL` と `USER_TOKEN` を設定
-    * `URL`
-        * MastodonインスタンスのURL
-    * `USER_TOKEN`
-        * 1で発行したAccess Token
+1. Set `URL` and `USER_TOKEN` in `.env`:
+    * `URL`: The URL of your Mastodon instance
+    * `USER_TOKEN`: The Access Token generated in step 1
 
 ## Usage
-1. `$ npm run start`
+1. Run the application:
+    ```bash
+    $ npm run start
+    ```
 
 ## Configuration
 ### .env
 * `SPAM_REPORTER_TOKEN`
-    * `USER_TOKEN` とは別のアカウントで通報を行う場合は、 `SPAM_REPORTER_TOKEN` にAccess Tokenを指定します
+    * If you want to report from a different account than the one in `USER_TOKEN`, specify the Access Token here.
 * `REPORT_THRESHOLD_MENTION_COUNT`
-    * スパム判定となる1投稿あたりのメンション数を変更する場合は、 `REPORT_THRESHOLD_MENTION_COUNT` を指定します
+    * Set the number of mentions per post required to flag it as spam.
 * `REPORT_THRESHOLD_URL_COUNT`
-    * スパム判定となる1投稿あたりのURL数を変更する場合は、 `REPORT_THRESHOLD_URL_COUNT` を指定します。
+    * Set the number of URLs per post required to flag it as spam.
 * `REPORT_COMMENT`
-    * 通報時のコメントを指定する場合は、 `REPORT_COMMENT` を指定します。
+    * Add a comment when reporting a post.
 * `SHOULD_BLOCK_SPAM_ACCOUNT`
-    * 通報後にアカウントをブロックする場合は、 `SHOULD_BLOCK_SPAM_ACCOUNT` に `1` を指定します。
+    * Set to `1` if you want to block the account after reporting.
 * `LOG_LEVEL`
-    * ログレベルを変更する場合は、`LOG_LEVEL` を指定します。
+    * Set the log level.
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
