@@ -1,24 +1,26 @@
 {
-  "name": "autoreporter",
+  "name": "spamautoreporterformastodon",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "auto reporting toot posted by spam for mastodon.",
+  "main": "dist/app.js",
   "scripts": {
-    "dev": "npm run build && npm run start",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/app.js | pino-pretty",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "build:start": "npm run build && npm run start",
+    "build:start:pretty": "npm run build && npm run start:pretty",
+    "start": "node dist/app.js",
+    "start:pretty": "npm run start | pino-pretty",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "rettar5",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.7.5",
+    "pino-pretty": "^11.2.2",
     "typescript": "^5.6.3"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
     "masto": "^6.8.0",
-    "pino": "^9.4.0",
-    "pino-pretty": "^11.2.2"
+    "pino": "^9.4.0"
   }
 }
