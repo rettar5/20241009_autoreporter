@@ -17,7 +17,7 @@ Automatically reports suspicious spam posts that mention your Mastodon account.
 
 ### Environment Setup
 1. Generate an Access Token from Mastodon (User Settings > Development > New App) with the following permissions:
-    * `read:accounts`
+    * `read:follows`
         * Used to determine if the account is followed
     * `read:notifications`
         * Used to detect mentions
